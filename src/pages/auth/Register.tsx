@@ -1,10 +1,9 @@
-
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { useAuth } from '@/context/AuthContext';
+import { useAuth } from '@/context/use-auth';
 import { Button } from '@/components/ui/button';
 import {
   Form,
@@ -33,7 +32,7 @@ type FormValues = z.infer<typeof formSchema>;
 
 const Register = () => {
   const { register, isLoading } = useAuth();
-  
+
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -43,7 +42,7 @@ const Register = () => {
       confirmPassword: '',
     },
   });
-  
+
   const onSubmit = async (data: FormValues) => {
     try {
       await register(data.name, data.email, data.password);
@@ -52,7 +51,7 @@ const Register = () => {
       toast.error('Error en el registro. Por favor, inténtelo de nuevo.');
     }
   };
-  
+
   return (
     <div className="min-h-screen flex items-center justify-center px-4 bg-gradient-to-br from-futuristic-bg-dark to-futuristic-bg">
       <div className="w-full max-w-md">
@@ -61,7 +60,7 @@ const Register = () => {
           <h1 className="text-3xl font-bold mb-2">Crear una cuenta</h1>
           <p className="text-futuristic-text-secondary">Regístrese para comenzar</p>
         </div>
-        
+
         <div className="futuristic-card p-8">
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
@@ -72,17 +71,17 @@ const Register = () => {
                   <FormItem>
                     <FormLabel>Nombre completo</FormLabel>
                     <FormControl>
-                      <Input 
+                      <Input
                         className="futuristic-input"
-                        placeholder="Juan Pérez" 
-                        {...field} 
+                        placeholder="Juan Pérez"
+                        {...field}
                       />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
               />
-              
+
               <FormField
                 control={form.control}
                 name="email"
@@ -90,17 +89,17 @@ const Register = () => {
                   <FormItem>
                     <FormLabel>Email</FormLabel>
                     <FormControl>
-                      <Input 
+                      <Input
                         className="futuristic-input"
-                        placeholder="nombre@empresa.com" 
-                        {...field} 
+                        placeholder="nombre@empresa.com"
+                        {...field}
                       />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
               />
-              
+
               <FormField
                 control={form.control}
                 name="password"
@@ -108,18 +107,18 @@ const Register = () => {
                   <FormItem>
                     <FormLabel>Contraseña</FormLabel>
                     <FormControl>
-                      <Input 
+                      <Input
                         className="futuristic-input"
-                        type="password" 
-                        placeholder="••••••••" 
-                        {...field} 
+                        type="password"
+                        placeholder="••••••••"
+                        {...field}
                       />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
               />
-              
+
               <FormField
                 control={form.control}
                 name="confirmPassword"
@@ -127,20 +126,20 @@ const Register = () => {
                   <FormItem>
                     <FormLabel>Confirmar contraseña</FormLabel>
                     <FormControl>
-                      <Input 
+                      <Input
                         className="futuristic-input"
-                        type="password" 
-                        placeholder="••••••••" 
-                        {...field} 
+                        type="password"
+                        placeholder="••••••••"
+                        {...field}
                       />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
               />
-              
-              <Button 
-                type="submit" 
+
+              <Button
+                type="submit"
                 className="w-full bg-gradient-button hover:shadow-glow"
                 disabled={isLoading}
               >
@@ -153,12 +152,12 @@ const Register = () => {
                   'Registrarse'
                 )}
               </Button>
-              
+
               <div className="text-center mt-6">
                 <p className="text-sm text-futuristic-text-secondary">
                   ¿Ya tiene una cuenta?{' '}
-                  <Link 
-                    to="/login" 
+                  <Link
+                    to="/login"
                     className="text-futuristic-accent hover:text-futuristic-accent-hover font-medium"
                   >
                     Iniciar sesión
@@ -168,7 +167,7 @@ const Register = () => {
             </form>
           </Form>
         </div>
-        
+
         <div className="mt-8 text-center text-xs text-muted-foreground">
           <p>© {new Date().getFullYear()} Nexus - Gestión de Proyectos</p>
         </div>

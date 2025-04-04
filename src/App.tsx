@@ -1,11 +1,10 @@
-
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 
-import { AuthProvider } from "@/context/AuthContext";
+import { AuthProvider } from "@/context/auth-context";
 import Layout from "@/components/layout/Layout";
 import Login from "@/pages/auth/Login";
 import Register from "@/pages/auth/Register";
@@ -18,11 +17,11 @@ import NotFound from "@/pages/NotFound";
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   // In a real app, this would check for the token's existence
   const isAuthenticated = localStorage.getItem("token") !== null;
-  
+
   if (!isAuthenticated) {
     return <Navigate to="/login" replace />;
   }
-  
+
   return <>{children}</>;
 };
 
@@ -48,7 +47,7 @@ const App = () => {
               <Route path="/" element={<Navigate to="/login" replace />} />
               <Route path="/login" element={<Login />} />
               <Route path="/register" element={<Register />} />
-              
+
               {/* Protected routes */}
               <Route path="/dashboard" element={
                 <ProtectedRoute>
@@ -57,7 +56,7 @@ const App = () => {
                   </Layout>
                 </ProtectedRoute>
               } />
-              
+
               <Route path="/clients" element={
                 <ProtectedRoute>
                   <Layout>
@@ -65,7 +64,7 @@ const App = () => {
                   </Layout>
                 </ProtectedRoute>
               } />
-              
+
               <Route path="/projects" element={
                 <ProtectedRoute>
                   <Layout>
@@ -73,7 +72,7 @@ const App = () => {
                   </Layout>
                 </ProtectedRoute>
               } />
-              
+
               <Route path="*" element={<NotFound />} />
             </Routes>
           </AuthProvider>

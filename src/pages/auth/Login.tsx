@@ -1,10 +1,9 @@
-
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { useAuth } from '@/context/AuthContext';
+import { useAuth } from '@/context/use-auth';
 import { Button } from '@/components/ui/button';
 import {
   Form,
@@ -28,7 +27,7 @@ type FormValues = z.infer<typeof formSchema>;
 
 const Login = () => {
   const { login, isLoading } = useAuth();
-  
+
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -36,7 +35,7 @@ const Login = () => {
       password: '',
     },
   });
-  
+
   const onSubmit = async (data: FormValues) => {
     try {
       await login(data.email, data.password);
@@ -45,7 +44,7 @@ const Login = () => {
       toast.error('Error en el inicio de sesión. Por favor, inténtelo de nuevo.');
     }
   };
-  
+
   return (
     <div className="min-h-screen flex items-center justify-center px-4 bg-gradient-to-br from-futuristic-bg-dark to-futuristic-bg">
       <div className="w-full max-w-md">
@@ -54,7 +53,7 @@ const Login = () => {
           <h1 className="text-3xl font-bold mb-2">Bienvenido de nuevo</h1>
           <p className="text-futuristic-text-secondary">Inicie sesión para continuar</p>
         </div>
-        
+
         <div className="futuristic-card p-8">
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
@@ -65,17 +64,17 @@ const Login = () => {
                   <FormItem>
                     <FormLabel>Email</FormLabel>
                     <FormControl>
-                      <Input 
+                      <Input
                         className="futuristic-input"
-                        placeholder="nombre@empresa.com" 
-                        {...field} 
+                        placeholder="nombre@empresa.com"
+                        {...field}
                       />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
               />
-              
+
               <FormField
                 control={form.control}
                 name="password"
@@ -83,28 +82,28 @@ const Login = () => {
                   <FormItem>
                     <div className="flex items-center justify-between">
                       <FormLabel>Contraseña</FormLabel>
-                      <Link 
-                        to="/forgot-password" 
+                      <Link
+                        to="/forgot-password"
                         className="text-xs text-futuristic-accent hover:text-futuristic-accent-hover"
                       >
                         ¿Olvidó su contraseña?
                       </Link>
                     </div>
                     <FormControl>
-                      <Input 
+                      <Input
                         className="futuristic-input"
-                        type="password" 
-                        placeholder="••••••••" 
-                        {...field} 
+                        type="password"
+                        placeholder="••••••••"
+                        {...field}
                       />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
               />
-              
-              <Button 
-                type="submit" 
+
+              <Button
+                type="submit"
                 className="w-full bg-gradient-button hover:shadow-glow"
                 disabled={isLoading}
               >
@@ -117,12 +116,12 @@ const Login = () => {
                   'Iniciar Sesión'
                 )}
               </Button>
-              
+
               <div className="text-center mt-6">
                 <p className="text-sm text-futuristic-text-secondary">
                   ¿No tiene una cuenta?{' '}
-                  <Link 
-                    to="/register" 
+                  <Link
+                    to="/register"
                     className="text-futuristic-accent hover:text-futuristic-accent-hover font-medium"
                   >
                     Regístrese
@@ -132,7 +131,7 @@ const Login = () => {
             </form>
           </Form>
         </div>
-        
+
         <div className="mt-8 text-center text-xs text-muted-foreground">
           <p>© {new Date().getFullYear()} Nexus - Gestión de Proyectos</p>
         </div>

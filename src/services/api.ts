@@ -1,4 +1,3 @@
-
 import axios from 'axios';
 import { toast } from 'sonner';
 
@@ -12,8 +11,10 @@ const api = axios.create({
 
 // Request interceptor to add auth token
 api.interceptors.request.use(
-  (config) => {
+  async (config) => {
+    // Get token from localStorage (our custom JWT token)
     const token = localStorage.getItem('token');
+
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
@@ -24,21 +25,20 @@ api.interceptors.request.use(
   }
 );
 
-// Response interceptor to handle errors and token refresh
+// Response interceptor to handle errors
 api.interceptors.response.use(
   (response) => {
     return response;
   },
   async (error) => {
     const originalRequest = error.config;
-    
+
     // Handle 401 Unauthorized errors
     if (error.response?.status === 401 && !originalRequest._retry) {
       originalRequest._retry = true;
-      
+
       try {
-        // Ideally we'd have a refresh token mechanism here
-        // For now, just redirect to login
+        // Just clear local auth state and redirect to login
         localStorage.removeItem('token');
         window.location.href = '/login';
         return Promise.reject(error);
@@ -46,11 +46,11 @@ api.interceptors.response.use(
         return Promise.reject(err);
       }
     }
-    
+
     // Show error toast for other errors
-    const message = error.response?.data?.message || 'Something went wrong';
+    const message = error.response?.data?.message || 'Algo salió mal';
     toast.error(message);
-    
+
     return Promise.reject(error);
   }
 );

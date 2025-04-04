@@ -1,8 +1,7 @@
-
 import React, { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { cn } from '@/lib/utils';
-import { useAuth } from '@/context/AuthContext';
+import { useAuth } from '@/context/use-auth';
 import {
   LayoutDashboard,
   Users,
@@ -36,9 +35,9 @@ const Sidebar = () => {
   return (
     <>
       {/* Mobile menu toggle button */}
-      <Button 
-        variant="ghost" 
-        size="icon" 
+      <Button
+        variant="ghost"
+        size="icon"
         className="md:hidden fixed top-4 left-4 z-50 bg-futuristic-bg-dark/80 backdrop-blur-md"
         onClick={toggleMobileMenu}
       >
@@ -46,7 +45,7 @@ const Sidebar = () => {
       </Button>
 
       {/* Sidebar container */}
-      <aside 
+      <aside
         className={cn(
           "fixed inset-y-0 left-0 z-40 bg-gradient-sidebar border-r border-white/5 shadow-lg transition-all duration-300",
           collapsed ? "w-20" : "w-64",
@@ -61,27 +60,27 @@ const Sidebar = () => {
               <h1 className="text-white font-bold text-xl">Nexus</h1>
             </div>
           )}
-          <Button 
-            variant="ghost" 
-            size="icon" 
+          <Button
+            variant="ghost"
+            size="icon"
             className="hidden md:flex"
             onClick={toggleSidebar}
           >
             <ChevronRight size={20} className={cn("transition-transform", collapsed ? "rotate-0" : "rotate-180")} />
           </Button>
         </div>
-      
+
         {/* Navigation */}
         <nav className="px-3 py-4">
           <ul className="space-y-1">
             {navItems.map((item) => (
               <li key={item.path}>
                 <Link to={item.path}>
-                  <div 
+                  <div
                     className={cn(
                       "flex items-center py-3 px-3 rounded-lg transition-all duration-200",
-                      isActiveRoute(item.path) 
-                        ? "bg-futuristic-accent text-white shadow-glow-sm" 
+                      isActiveRoute(item.path)
+                        ? "bg-futuristic-accent text-white shadow-glow-sm"
                         : "text-futuristic-text-secondary hover:bg-white/5"
                     )}
                   >
@@ -95,11 +94,11 @@ const Sidebar = () => {
             ))}
           </ul>
         </nav>
-      
+
         {/* Sidebar footer with logout */}
         <div className="absolute bottom-0 w-full p-3 border-t border-white/5">
-          <Button 
-            variant="ghost" 
+          <Button
+            variant="ghost"
             className={cn(
               "w-full text-futuristic-text-secondary hover:bg-white/5",
               collapsed ? "justify-center" : "justify-start"
