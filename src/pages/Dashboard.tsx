@@ -1,10 +1,11 @@
-
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Users, FolderKanban, Clock, CheckCircle, Activity } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import StatCard from '@/components/dashboard/StatCard';
 import ProjectStatusBadge, { ProjectStatus } from '@/components/projects/ProjectStatusBadge';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { useProjects } from '@/hooks/useProjects';
+import { useClients } from '@/hooks/useClients';
 
 interface RecentProject {
   id: string;
@@ -22,56 +23,114 @@ interface RecentClient {
 }
 
 const Dashboard = () => {
-  // Mock data
-  const recentProjects: RecentProject[] = [
-    { id: '1', name: 'Rediseño Web Corporativa', client: 'Empresa A', status: 'IN_PROGRESS', updatedAt: '2023-04-01' },
-    { id: '2', name: 'App Móvil de Ventas', client: 'Empresa B', status: 'PENDING', updatedAt: '2023-03-28' },
-    { id: '3', name: 'Integración CRM', client: 'Empresa C', status: 'COMPLETED', updatedAt: '2023-03-25' },
-    { id: '4', name: 'Plataforma E-learning', client: 'Empresa D', status: 'IN_PROGRESS', updatedAt: '2023-03-20' },
-  ];
-  
-  const recentClients: RecentClient[] = [
-    { id: '1', name: 'Empresa A', email: 'contacto@empresaa.com', projectCount: 3 },
-    { id: '2', name: 'Empresa B', email: 'contacto@empresab.com', projectCount: 1 },
-    { id: '3', name: 'Empresa C', email: 'contacto@empresac.com', projectCount: 2 },
-    { id: '4', name: 'Empresa D', email: 'contacto@empresad.com', projectCount: 1 },
-  ];
-  
+  // Get real data using hooks
+  const { getProjects } = useProjects();
+  const { getClients } = useClients();
+
+  const projectsQuery = getProjects();
+  const clientsQuery = getClients();
+
+  const [stats, setStats] = useState({
+    totalClients: 0,
+    totalProjects: 0,
+    pendingProjects: 0,
+    completedProjects: 0
+  });
+
+  const [recentProjects, setRecentProjects] = useState<RecentProject[]>([]);
+  const [recentClients, setRecentClients] = useState<RecentClient[]>([]);
+
+  useEffect(() => {
+    if (projectsQuery.data && clientsQuery.data) {
+      // Calculate stats
+      const projects = projectsQuery.data;
+      const clients = clientsQuery.data;
+
+      setStats({
+        totalClients: clients.length,
+        totalProjects: projects.length,
+        pendingProjects: projects.filter(p => p.status === 'PENDING').length,
+        completedProjects: projects.filter(p => p.status === 'COMPLETED').length
+      });
+
+      // Get recent projects
+      const formattedProjects = projects
+        .sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime())
+        .slice(0, 4)
+        .map(project => ({
+          id: project.id,
+          name: project.name,
+          client: project.client?.name || 'Sin cliente',
+          status: project.status as ProjectStatus,
+          updatedAt: project.updatedAt
+        }));
+
+      setRecentProjects(formattedProjects);
+
+      // Get recent clients
+      const formattedClients = clients
+        .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+        .slice(0, 4)
+        .map(client => ({
+          id: client.id,
+          name: client.name,
+          email: client.email,
+          projectCount: projects.filter(p => p.clientId === client.id).length
+        }));
+
+      setRecentClients(formattedClients);
+    }
+  }, [projectsQuery.data, clientsQuery.data]);
+
+  // Loading state
+  if (projectsQuery.isLoading || clientsQuery.isLoading) {
+    return <div className="flex justify-center items-center h-64">Cargando datos del dashboard...</div>;
+  }
+
+  // Error state
+  if (projectsQuery.error || clientsQuery.error) {
+    return (
+      <div className="bg-red-50 border border-red-200 text-red-700 p-4 rounded-md">
+        Error al cargar datos: {(projectsQuery.error || clientsQuery.error)?.message}
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-8">
       <div>
         <h1 className="text-3xl font-bold tracking-tight">Dashboard</h1>
         <p className="text-muted-foreground mt-1">Bienvenido al panel de gestión de proyectos.</p>
       </div>
-      
+
       {/* Stats Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <StatCard 
+        <StatCard
           title="Clientes Totales"
-          value={12}
+          value={stats.totalClients}
           icon={<Users size={24} />}
-          trend={{ value: 10, isPositive: true }}
+          trend={{ value: 0, isPositive: true }}
         />
-        <StatCard 
+        <StatCard
           title="Proyectos Totales"
-          value={24}
+          value={stats.totalProjects}
           icon={<FolderKanban size={24} />}
-          trend={{ value: 5, isPositive: true }}
+          trend={{ value: 0, isPositive: true }}
         />
-        <StatCard 
+        <StatCard
           title="Proyectos Pendientes"
-          value={8}
+          value={stats.pendingProjects}
           icon={<Clock size={24} />}
-          trend={{ value: 2, isPositive: false }}
+          trend={{ value: 0, isPositive: false }}
         />
-        <StatCard 
+        <StatCard
           title="Proyectos Completados"
-          value={14}
+          value={stats.completedProjects}
           icon={<CheckCircle size={24} />}
-          trend={{ value: 12, isPositive: true }}
+          trend={{ value: 0, isPositive: true }}
         />
       </div>
-      
+
       {/* Overview Charts */}
       <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
         <Card className="futuristic-card overflow-hidden">
@@ -82,27 +141,31 @@ const Dashboard = () => {
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              {recentProjects.map(project => (
-                <div 
-                  key={project.id} 
-                  className="flex items-center justify-between p-3 rounded-lg bg-futuristic-bg-dark/50 hover:bg-futuristic-bg-dark/70 transition-colors"
-                >
-                  <div className="space-y-1">
-                    <h4 className="font-medium text-sm">{project.name}</h4>
-                    <p className="text-xs text-muted-foreground">Cliente: {project.client}</p>
+              {recentProjects.length > 0 ? (
+                recentProjects.map(project => (
+                  <div
+                    key={project.id}
+                    className="flex items-center justify-between p-3 rounded-lg bg-futuristic-bg-dark/50 hover:bg-futuristic-bg-dark/70 transition-colors"
+                  >
+                    <div className="space-y-1">
+                      <h4 className="font-medium text-sm">{project.name}</h4>
+                      <p className="text-xs text-muted-foreground">Cliente: {project.client}</p>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <span className="text-xs text-muted-foreground whitespace-nowrap">
+                        {new Date(project.updatedAt).toLocaleDateString()}
+                      </span>
+                      <ProjectStatusBadge status={project.status} />
+                    </div>
                   </div>
-                  <div className="flex items-center gap-3">
-                    <span className="text-xs text-muted-foreground whitespace-nowrap">
-                      {new Date(project.updatedAt).toLocaleDateString()}
-                    </span>
-                    <ProjectStatusBadge status={project.status} />
-                  </div>
-                </div>
-              ))}
+                ))
+              ) : (
+                <p className="text-sm text-muted-foreground text-center py-4">No hay proyectos recientes</p>
+              )}
             </div>
           </CardContent>
         </Card>
-        
+
         <Card className="futuristic-card overflow-hidden">
           <div className="h-1 bg-gradient-button w-full"></div>
           <CardHeader className="pb-2">
@@ -111,34 +174,38 @@ const Dashboard = () => {
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              {recentClients.map(client => (
-                <div 
-                  key={client.id} 
-                  className="flex items-center justify-between p-3 rounded-lg bg-futuristic-bg-dark/50 hover:bg-futuristic-bg-dark/70 transition-colors"
-                >
-                  <div className="flex items-center gap-3">
-                    <Avatar className="h-8 w-8 border border-white/10">
-                      <AvatarFallback className="bg-futuristic-secondary text-white text-xs">
-                        {client.name.substring(0, 2).toUpperCase()}
-                      </AvatarFallback>
-                    </Avatar>
-                    <div className="space-y-1">
-                      <h4 className="font-medium text-sm">{client.name}</h4>
-                      <p className="text-xs text-muted-foreground">{client.email}</p>
+              {recentClients.length > 0 ? (
+                recentClients.map(client => (
+                  <div
+                    key={client.id}
+                    className="flex items-center justify-between p-3 rounded-lg bg-futuristic-bg-dark/50 hover:bg-futuristic-bg-dark/70 transition-colors"
+                  >
+                    <div className="flex items-center gap-3">
+                      <Avatar className="h-8 w-8 border border-white/10">
+                        <AvatarFallback className="bg-futuristic-secondary text-white text-xs">
+                          {client.name.substring(0, 2).toUpperCase()}
+                        </AvatarFallback>
+                      </Avatar>
+                      <div className="space-y-1">
+                        <h4 className="font-medium text-sm">{client.name}</h4>
+                        <p className="text-xs text-muted-foreground">{client.email}</p>
+                      </div>
+                    </div>
+                    <div className="flex items-center">
+                      <span className="text-xs font-medium bg-futuristic-accent/10 text-futuristic-accent px-2 py-1 rounded">
+                        {client.projectCount} Proyectos
+                      </span>
                     </div>
                   </div>
-                  <div className="flex items-center">
-                    <span className="text-xs font-medium bg-futuristic-accent/10 text-futuristic-accent px-2 py-1 rounded">
-                      {client.projectCount} Proyectos
-                    </span>
-                  </div>
-                </div>
-              ))}
+                ))
+              ) : (
+                <p className="text-sm text-muted-foreground text-center py-4">No hay clientes recientes</p>
+              )}
             </div>
           </CardContent>
         </Card>
       </div>
-      
+
       {/* Activity Section */}
       <Card className="futuristic-card overflow-hidden">
         <div className="h-1 bg-gradient-button w-full"></div>
@@ -151,41 +218,53 @@ const Dashboard = () => {
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
-            <div className="flex gap-3">
-              <div className="w-10 flex justify-center">
-                <div className="w-1 h-full bg-futuristic-accent/20 relative rounded-full">
-                  <div className="absolute w-3 h-3 rounded-full bg-futuristic-accent -left-1 top-1"></div>
+            {recentProjects.length > 0 && (
+              <div className="flex gap-3">
+                <div className="w-10 flex justify-center">
+                  <div className="w-1 h-full bg-futuristic-accent/20 relative rounded-full">
+                    <div className="absolute w-3 h-3 rounded-full bg-futuristic-accent -left-1 top-1"></div>
+                  </div>
+                </div>
+                <div className="pb-6">
+                  <p className="text-sm">Proyecto <span className="font-medium text-white">{recentProjects[0].name}</span> actualizado</p>
+                  <p className="text-xs text-muted-foreground mt-1">Reciente</p>
                 </div>
               </div>
-              <div className="pb-6">
-                <p className="text-sm">Proyecto <span className="font-medium text-white">App Móvil de Ventas</span> creado</p>
-                <p className="text-xs text-muted-foreground mt-1">Hace 2 horas</p>
-              </div>
-            </div>
-            
-            <div className="flex gap-3">
-              <div className="w-10 flex justify-center">
-                <div className="w-1 h-full bg-futuristic-accent/20 relative rounded-full">
-                  <div className="absolute w-3 h-3 rounded-full bg-futuristic-status-completed -left-1 top-1"></div>
+            )}
+
+            {recentProjects.find(p => p.status === 'COMPLETED') && (
+              <div className="flex gap-3">
+                <div className="w-10 flex justify-center">
+                  <div className="w-1 h-full bg-futuristic-accent/20 relative rounded-full">
+                    <div className="absolute w-3 h-3 rounded-full bg-futuristic-status-completed -left-1 top-1"></div>
+                  </div>
+                </div>
+                <div className="pb-6">
+                  <p className="text-sm">Proyecto <span className="font-medium text-white">
+                    {recentProjects.find(p => p.status === 'COMPLETED')?.name}
+                  </span> marcado como completado</p>
+                  <p className="text-xs text-muted-foreground mt-1">Reciente</p>
                 </div>
               </div>
-              <div className="pb-6">
-                <p className="text-sm">Proyecto <span className="font-medium text-white">Integración CRM</span> marcado como completado</p>
-                <p className="text-xs text-muted-foreground mt-1">Hace 5 horas</p>
-              </div>
-            </div>
-            
-            <div className="flex gap-3">
-              <div className="w-10 flex justify-center">
-                <div className="w-1 h-full bg-futuristic-accent/20 relative rounded-full">
-                  <div className="absolute w-3 h-3 rounded-full bg-futuristic-status-pending -left-1 top-1"></div>
+            )}
+
+            {recentClients.length > 0 && (
+              <div className="flex gap-3">
+                <div className="w-10 flex justify-center">
+                  <div className="w-1 h-full bg-futuristic-accent/20 relative rounded-full">
+                    <div className="absolute w-3 h-3 rounded-full bg-futuristic-status-pending -left-1 top-1"></div>
+                  </div>
+                </div>
+                <div className="pb-6">
+                  <p className="text-sm">Nuevo cliente <span className="font-medium text-white">{recentClients[0].name}</span> registrado</p>
+                  <p className="text-xs text-muted-foreground mt-1">Reciente</p>
                 </div>
               </div>
-              <div className="pb-6">
-                <p className="text-sm">Nuevo cliente <span className="font-medium text-white">Empresa D</span> registrado</p>
-                <p className="text-xs text-muted-foreground mt-1">Hace 1 día</p>
-              </div>
-            </div>
+            )}
+
+            {recentProjects.length === 0 && recentClients.length === 0 && (
+              <p className="text-sm text-muted-foreground text-center py-4">No hay actividad reciente</p>
+            )}
           </div>
         </CardContent>
       </Card>

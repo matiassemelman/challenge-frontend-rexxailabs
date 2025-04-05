@@ -1,113 +1,52 @@
-import { supabase } from '@/integrations/supabase/client';
-import { Tables, TablesInsert, TablesUpdate, Enums } from '@/integrations/supabase/types';
+import api from '@/services/api';
+import { Tables, Enums } from '@/integrations/supabase/types';
 
 type Project = Tables<'Project'>;
-type ProjectInsert = TablesInsert<'Project'>;
-type ProjectUpdate = TablesUpdate<'Project'>;
 type ProjectStatus = Enums<'ProjectStatus'>;
+type ProjectError = Error;
 
 export const projectService = {
   // Get all projects
   async getAll() {
-    const { data, error } = await supabase
-      .from('Project')
-      .select('*, Client(id, name)')
-      .order('createdAt', { ascending: false });
-
-    if (error) throw error;
-    return data;
+    const response = await api.get('/projects');
+    return response.data;
   },
 
   // Get a project by ID
   async getById(id: string) {
-    const { data, error } = await supabase
-      .from('Project')
-      .select('*, Client(id, name, email, phone)')
-      .eq('id', id)
-      .single();
-
-    if (error) throw error;
-    return data;
+    const response = await api.get(`/projects/${id}`);
+    return response.data;
   },
 
   // Get projects by client
   async getByClient(clientId: string) {
-    const { data, error } = await supabase
-      .from('Project')
-      .select('*')
-      .eq('clientId', clientId)
-      .order('createdAt', { ascending: false });
-
-    if (error) throw error;
-    return data;
+    const response = await api.get('/projects', {
+      params: { clientId }
+    });
+    return response.data;
   },
 
   // Create a new project
-  async create(project: Omit<ProjectInsert, 'id' | 'createdAt' | 'updatedAt'>) {
-    const now = new Date().toISOString();
-    const newProject: ProjectInsert = {
-      id: crypto.randomUUID(),
-      createdAt: now,
-      updatedAt: now,
-      status: project.status || 'PENDING',
-      ...project
-    };
-
-    const { data, error } = await supabase
-      .from('Project')
-      .insert(newProject)
-      .select()
-      .single();
-
-    if (error) throw error;
-    return data;
+  async create(project: Record<string, any>) {
+    const response = await api.post('/projects', project);
+    return response.data;
   },
 
   // Update an existing project
-  async update(id: string, project: Omit<ProjectUpdate, 'id' | 'createdAt' | 'updatedAt'>) {
-    const now = new Date().toISOString();
-    const updatedProject: ProjectUpdate = {
-      ...project,
-      updatedAt: now
-    };
-
-    const { data, error } = await supabase
-      .from('Project')
-      .update(updatedProject)
-      .eq('id', id)
-      .select()
-      .single();
-
-    if (error) throw error;
-    return data;
+  async update(id: string, project: Record<string, any>) {
+    const response = await api.put(`/projects/${id}`, project);
+    return response.data;
   },
 
   // Update only the status of a project
   async updateStatus(id: string, status: ProjectStatus) {
-    const now = new Date().toISOString();
-
-    const { data, error } = await supabase
-      .from('Project')
-      .update({
-        status,
-        updatedAt: now
-      })
-      .eq('id', id)
-      .select()
-      .single();
-
-    if (error) throw error;
-    return data;
+    const response = await api.put(`/projects/${id}`, { status });
+    return response.data;
   },
 
   // Delete a project
   async delete(id: string) {
-    const { error } = await supabase
-      .from('Project')
-      .delete()
-      .eq('id', id);
-
-    if (error) throw error;
+    await api.delete(`/projects/${id}`);
     return true;
   }
 };

@@ -1,93 +1,81 @@
-import { supabase } from '@/integrations/supabase/client';
-import { Tables, TablesInsert, TablesUpdate } from '@/integrations/supabase/types';
+import api from '@/services/api';
+import { Tables } from '@/integrations/supabase/types';
+import { projectService } from './project.service';
 
 type Client = Tables<'Client'>;
-type ClientInsert = TablesInsert<'Client'>;
-type ClientUpdate = TablesUpdate<'Client'>;
+type ClientError = Error;
 
 export const clientService = {
-  // Get all clients for the current user
+  // Get all clients
   async getAll() {
-    const { data: userData } = await supabase.auth.getUser();
-    const userId = userData.user?.id;
+    const response = await api.get('/clients');
+    const clients = response.data;
 
-    if (!userId) throw new Error('User not authenticated');
+    // Fetch all projects to associate with clients
+    try {
+      const projects = await projectService.getAll();
 
-    const { data, error } = await supabase
-      .from('Client')
-      .select('*')
-      .eq('userId', userId)
-      .order('createdAt', { ascending: false });
-
-    if (error) throw error;
-    return data;
+      // Add projects property to each client
+      return clients.map(client => ({
+        ...client,
+        projects: projects.filter(project => project.clientId === client.id)
+      }));
+    } catch (error) {
+      console.error('Error fetching projects for clients:', error);
+      // If we fail to get projects, still return clients but with empty projects array
+      return clients.map(client => ({
+        ...client,
+        projects: []
+      }));
+    }
   },
 
   // Get a client by ID
   async getById(id: string) {
-    const { data, error } = await supabase
-      .from('Client')
-      .select('*, Project(*)')
-      .eq('id', id)
-      .single();
+    const response = await api.get(`/clients/${id}`);
+    const client = response.data;
 
-    if (error) throw error;
-    return data;
+    // Fetch projects for this client
+    try {
+      const projects = await projectService.getByClient(id);
+      return {
+        ...client,
+        projects
+      };
+    } catch (error) {
+      console.error(`Error fetching projects for client ${id}:`, error);
+      // Return client with empty projects array
+      return {
+        ...client,
+        projects: []
+      };
+    }
   },
 
   // Create a new client
-  async create(client: Omit<ClientInsert, 'id' | 'userId' | 'createdAt' | 'updatedAt'>) {
-    const { data: userData } = await supabase.auth.getUser();
-    const userId = userData.user?.id;
-
-    if (!userId) throw new Error('User not authenticated');
-
-    const now = new Date().toISOString();
-    const newClient: ClientInsert = {
-      id: crypto.randomUUID(),
-      userId,
-      createdAt: now,
-      updatedAt: now,
-      ...client
+  async create(client: Omit<any, 'id' | 'userId' | 'createdAt' | 'updatedAt'>) {
+    const response = await api.post('/clients', client);
+    return {
+      ...response.data,
+      projects: []
     };
-
-    const { data, error } = await supabase
-      .from('Client')
-      .insert(newClient)
-      .select()
-      .single();
-
-    if (error) throw error;
-    return data;
   },
 
   // Update an existing client
-  async update(id: string, client: Omit<ClientUpdate, 'id' | 'userId' | 'createdAt' | 'updatedAt'>) {
-    const now = new Date().toISOString();
-    const updatedClient: ClientUpdate = {
-      ...client,
-      updatedAt: now
+  async update(id: string, client: any) {
+    const response = await api.put(`/clients/${id}`, client);
+
+    // Maintain projects from the original client
+    const originalClient = await this.getById(id);
+    return {
+      ...response.data,
+      projects: originalClient.projects || []
     };
-
-    const { data, error } = await supabase
-      .from('Client')
-      .update(updatedClient)
-      .eq('id', id)
-      .select()
-      .single();
-
-    if (error) throw error;
-    return data;
   },
 
   // Delete a client
   async delete(id: string) {
-    const { error } = await supabase
-      .from('Client')
-      .delete()
-      .eq('id', id);
-
-    if (error) throw error;
+    await api.delete(`/clients/${id}`);
     return true;
   }
 };
