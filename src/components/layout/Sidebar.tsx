@@ -6,7 +6,6 @@ import {
   LayoutDashboard,
   Users,
   FolderKanban,
-  Settings,
   LogOut,
   Menu,
   X,
@@ -24,7 +23,6 @@ const Sidebar = () => {
     { icon: LayoutDashboard, label: 'Dashboard', path: '/dashboard' },
     { icon: Users, label: 'Clientes', path: '/clients' },
     { icon: FolderKanban, label: 'Proyectos', path: '/projects' },
-    { icon: Settings, label: 'Configuración', path: '/settings' },
   ];
 
   const toggleSidebar = () => setCollapsed(prev => !prev);
@@ -57,7 +55,7 @@ const Sidebar = () => {
           {!collapsed && (
             <div className="flex items-center gap-2">
               <div className="w-8 h-8 rounded-full bg-gradient-button animate-pulse-glow"></div>
-              <h1 className="text-white font-bold text-xl">Nexus</h1>
+              <h1 className="text-white font-bold text-xl">RexxaiLabs</h1>
             </div>
           )}
           <Button
