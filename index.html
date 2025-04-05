@@ -15,6 +15,32 @@
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:site" content="" />
     <meta name="twitter:image" content="" />
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+
+    <!-- Script para manejar rutas en SPA (importante para despliegue) -->
+    <script type="text/javascript">
+      // Este script ayuda con la navegación en SPA cuando se carga una URL específica en producción
+      (function() {
+        // Solo ejecutar en producción
+        if (window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1') {
+          const segmentCount = 1;
+          const l = window.location;
+          if (l.search) {
+            // Reescribe la URL solo si no es la raíz y tiene parámetros
+            const origin = l.origin || l.protocol + '//' + l.host;
+            window.history.replaceState(
+              null, null,
+              origin + l.pathname.split('/').slice(0, 1 + segmentCount).join('/') + '/?p=/' +
+              l.pathname.slice(1).split('/').slice(segmentCount).join('/').replace(/&/g, '~and~') +
+              (l.search ? '&q=' + l.search.slice(1).replace(/&/g, '~and~') : '') +
+              l.hash
+            );
+          }
+        }
+      })();
+    </script>
   </head>
 
   <body>
