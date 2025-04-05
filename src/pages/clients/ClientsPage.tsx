@@ -14,10 +14,12 @@ import {
 import ClientCard, { Client } from '@/components/clients/ClientCard';
 import { toast } from 'sonner';
 import { useClients } from '@/hooks/useClients';
+import NewClientModal from '@/components/clients/NewClientModal';
 
 const ClientsPage = () => {
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [searchQuery, setSearchQuery] = useState('');
+  const [isNewClientModalOpen, setIsNewClientModalOpen] = useState(false);
 
   // Use real data from API
   const { getClients, deleteClient } = useClients();
@@ -62,9 +64,7 @@ const ClientsPage = () => {
   };
 
   const handleCreateClient = () => {
-    toast.info('Crear nuevo cliente');
-    // Here we would navigate to client create page or open modal
-    // navigate('/clients/new');
+    setIsNewClientModalOpen(true);
   };
 
   // Loading state
@@ -87,6 +87,12 @@ const ClientsPage = () => {
         <h1 className="text-3xl font-bold tracking-tight">Clientes</h1>
         <p className="text-muted-foreground mt-1">Gestione los clientes de su empresa.</p>
       </div>
+
+      {/* New Client Modal */}
+      <NewClientModal
+        isOpen={isNewClientModalOpen}
+        onClose={() => setIsNewClientModalOpen(false)}
+      />
 
       {/* Actions Bar */}
       <div className="flex flex-col sm:flex-row items-center justify-between gap-4">

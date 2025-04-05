@@ -32,10 +32,10 @@ export function useClients() {
       mutationFn: clientService.create,
       onSuccess: () => {
         queryClient.invalidateQueries({ queryKey: ['clients'] });
-        toast.success('Client created successfully');
+        toast.success('Cliente creado exitosamente');
       },
       onError: (error: ClientError) => {
-        toast.error(error.message || 'Error creating client');
+        toast.error(error.message || 'Error al crear el cliente');
       },
     });
   };
